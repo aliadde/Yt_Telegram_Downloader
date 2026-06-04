@@ -1,4 +1,5 @@
 from telethon import TelegramClient, events
+import asyncio
 from dotenv import load_dotenv
 import os
 import re
@@ -25,7 +26,7 @@ async def handler(event):
         if event.buttons:
             await event.click(2) # Click the second button (Download)
 
-        elif event.video and event is not None :
+        elif event.video and event.file:
             print("Received media message type video .")
             
             filename = re.sub(r'[\\/*?:"<>|]', "_", text)
@@ -48,27 +49,21 @@ async def handler(event):
     except Exception as e:
         print(f"ERROR: {e}")
 # -------- Run the client --------
-def main():
-    client.start()
+async def main():
+    await client.start()
 
-    client.loop.run_until_complete(
-        send_message("@YoutubeFiler_bot", "https://www.youtube.com/watch?v=AiqSS4XFkSI")
-    )
-
-    # client.loop.run_until_complete(
-    #     send_message("@YoutubeFiler_bot", "https://www.youtube.com/watch?v=kbq_4t7De_Y")
-    # )
-
-    # client.loop.run_until_complete(
-    #     send_message("@YoutubeFiler_bot", "https://www.youtube.com/watch?v=6D8MdVTyqd4")
-    # )
+    await send_message("@YoutubeFiler_bot", 
+                       "https://www.youtube.com/watch?v=AiqSS4XFkSI")
 
 
-    print("Waiting for messages...")
+    # await send_message("@YoutubeFiler_bot",
+    #  "https://www.youtube.com/watch?v=kbq_4t7De_Y")
 
-    client.run_until_disconnected()
+    # await send_message("@YoutubeFiler_bot",
+    #   "https://www.youtube.com/watch?v=6D8MdVTyqd4")
 
+    await client.run_until_disconnected()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
