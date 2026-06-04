@@ -1,5 +1,8 @@
 .venv/
 __pycache__/
+my_session.session
+my_session.session-journal
+.env
 *.pyc
 *.pyo
 *.pyd  
@@ -28,3 +31,4 @@ build/
 *.swp
 *.swo
 *.swn
+.ruff_cache

@@ -1,0 +1,17 @@
+black==26.5.1
+click==8.4.1
+iniconfig==2.3.0
+mypy_extensions==1.1.0
+packaging==26.2
+pathspec==1.1.1
+platformdirs==4.10.0
+pluggy==1.6.0
+pyaes==1.6.1
+pyasn1==0.6.3
+Pygments==2.20.0
+pytest==9.0.3
+python-dotenv==1.2.2
+pytokens==0.4.1
+rsa==4.9.1
+ruff==0.15.15
+Telethon==1.43.2
