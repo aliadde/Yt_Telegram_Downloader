@@ -32,3 +32,4 @@ build/
 *.swo
 *.swn
 .ruff_cache
+static/

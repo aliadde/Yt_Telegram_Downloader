@@ -1,3 +1,5 @@
+import random
+
 from telethon import TelegramClient, events
 import asyncio
 from dotenv import load_dotenv
@@ -17,6 +19,10 @@ client = TelegramClient("my_session", api_id, api_hash)
 async def send_message(username: str | int, message: str):
     await client.send_message(username, message)
 
+    # -- delay --
+    delay = random.uniform(4, 8)  
+    print(f"Waiting {delay:.1f}s before next action...")
+    await asyncio.sleep(delay)
 
 # -------- Handle incoming messages --------
 @client.on(events.NewMessage(chats="@YoutubeFiler_bot"))
@@ -25,6 +31,7 @@ async def handler(event):
         text = event.raw_text
 
         if event.buttons:
+            await asyncio.sleep(random.uniform(2, 5))
             await event.click(2)  # Click the second button (Download)
 
         elif event.video and event.file:
@@ -40,6 +47,7 @@ async def handler(event):
 
             except Exception as e:
                 print(f"Download failed: {e}")
+                exit()
 
         elif text:
             print("Received:", text)
@@ -52,18 +60,19 @@ async def handler(event):
 async def main():
     await client.start()
 
-    await send_message(
-        "@YoutubeFiler_bot", "https://www.youtube.com/watch?v=AiqSS4XFkSI"
-    )
+    urls = [
+        "https://www.youtube.com/watch?v=AiqSS4XFkSI",
+        "https://www.youtube.com/watch?v=kbq_4t7De_Y",
+        # "https://www.youtube.com/watch?v=6D8MdVTyqd4",
+    ]
 
-    # await send_message("@YoutubeFiler_bot",
-    #  "https://www.youtube.com/watch?v=kbq_4t7De_Y")
-
-    # await send_message("@YoutubeFiler_bot",
-    #   "https://www.youtube.com/watch?v=6D8MdVTyqd4")
-
+    for url in urls:
+        await send_message("@YoutubeFiler_bot", url)
+        await asyncio.sleep(random.uniform(40,90))
+    
     await client.run_until_disconnected()
-
+    print("all downloads done")
+    exit()
 
 if __name__ == "__main__":
     asyncio.run(main())
