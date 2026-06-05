@@ -9,7 +9,7 @@ from telethon import TelegramClient, events
 
 ENV_FILE = ".env"
 SESSION_FILE = "my_session.session"
-
+output_path = './static'
 
 # -------- Auto-setup if .env or session is missing --------
 async def ensure_setup():
@@ -46,8 +46,45 @@ def register_handlers(client: TelegramClient):
             text = event.raw_text
 
             if event.buttons:
-                await asyncio.sleep(random.uniform(2, 5))
-                await event.click(2)
+
+                stored_first_button=False
+                for row_index, row in enumerate(event.buttons):
+                    for col_index, button in enumerate(row):
+                        print(f"[{row_index}][{col_index}] → '{button.text}'")
+                        if not stored_first_button :
+                            first_btn=str(button.text)
+                            stored_first_button=True
+
+                target_text = "720p"
+                clicked = False
+
+                for row in event.buttons:
+                    for button in row:
+                        if target_text.lower() in button.text.lower():
+                            await asyncio.sleep(random.uniform(2, 5))
+                            await button.click()
+                            clicked = True
+                            break
+                    if clicked:
+                        break
+
+                if not clicked: # not found the 720p mp4 quuality. so click on first button
+                    print(f"⚠️ Button with text '{target_text}' not found!")
+                    print('click on first button')
+                    for row in event.buttons:
+                        for button in row:
+                            if first_btn.lower() in button.text.lower():
+                                await asyncio.sleep(random.uniform(2, 5))
+                                await button.click()
+                                clicked = True
+                                break
+
+                            if clicked:
+                                break
+
+                if not clicked:
+                    print("not button i think is there.")
+                
 
             elif event.video and event.file:
                 print("Received media message type video.")
@@ -57,8 +94,9 @@ def register_handlers(client: TelegramClient):
                 print(f"Start downloading video:\n\t {filename}.mp4")
 
                 try:
-                    os.makedirs("./static", exist_ok=True)
-                    await event.download_media(file=f"./static/{filename}.mp4")
+                    os.makedirs( output_path , exist_ok=True)
+                    opath = os.path.join(output_path, filename)
+                    await event.download_media(file=f"{opath}.mp4")
                     print("Downloaded successfully")
 
                 except Exception as e:
@@ -103,6 +141,9 @@ async def main():
     # Parse CLI arguments
     if len(sys.argv) > 1 and sys.argv[1] != "-l":
         urls = read_links_from_file(file_path=sys.argv[1])
+        if '-o' in sys.argv:
+            output_dir_index=sys.argv.index('-o') + 1 
+            output_path = os.makedirs(name=sys.argv[output_dir_index], exist_ok=True)
 
     elif "-l" in sys.argv:
         n = sys.argv.index("-l")
@@ -124,7 +165,7 @@ OR if you have only one link:
     await tg_client.start()
 
     downloaded_video_count = 0
-    for url in urls:
+    for i, url in enumerate(urls):
         download_done.clear()
         await send_message("@YoutubeFiler_bot", str(url), tg_client)
         downloaded_video_count += 1
@@ -135,7 +176,9 @@ OR if you have only one link:
             print("End of program.")
             sys.exit(0)
 
-        await asyncio.sleep(random.uniform(40, 90))
+        # if url is the last ur lin urls , do not wait for 40 ot 90 secounds
+        if i < len(urls) - 1:
+            await asyncio.sleep(random.uniform(20, 50))
 
     print("\n\nAll Downloads Done")
     sys.exit(0)
