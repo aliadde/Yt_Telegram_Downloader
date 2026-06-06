@@ -84,7 +84,7 @@ def register_handlers(client: TelegramClient):
 
                 if not clicked:
                     print("not button i think is there.")
-                
+
 
             elif event.video and event.file:
                 print("Received media message type video.")
@@ -142,8 +142,9 @@ async def main():
     if len(sys.argv) > 1 and sys.argv[1] != "-l":
         urls = read_links_from_file(file_path=sys.argv[1])
         if '-o' in sys.argv:
-            output_dir_index=sys.argv.index('-o') + 1 
-            output_path = os.makedirs(name=sys.argv[output_dir_index], exist_ok=True)
+            output_dir_index = sys.argv.index('-o') + 1
+            output_path = sys.argv[output_dir_index]
+            os.makedirs(output_path, exist_ok=True)
 
     elif "-l" in sys.argv:
         n = sys.argv.index("-l")
@@ -164,20 +165,13 @@ OR if you have only one link:
 
     await tg_client.start()
 
-    downloaded_video_count = 0
-    for i, url in enumerate(urls):
+    for downloaded_video_count, url in enumerate(urls, start=1):
         download_done.clear()
         await send_message("@YoutubeFiler_bot", str(url), tg_client)
-        downloaded_video_count += 1
         await download_done.wait()
 
-        if downloaded_video_count == 10:
-            print(f"Download count reached {downloaded_video_count}.")
-            print("End of program.")
-            sys.exit(0)
-
-        # if url is the last ur lin urls , do not wait for 40 ot 90 secounds
-        if i < len(urls) - 1:
+        # if url is the last url in urls , do not wait for 20 or 50 seconds
+        if downloaded_video_count < len(urls) - 1:
             await asyncio.sleep(random.uniform(20, 50))
 
     print("\n\nAll Downloads Done")
