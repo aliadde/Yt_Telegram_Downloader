@@ -42,6 +42,7 @@ async def send_message(username: str | int, message: str, client: TelegramClient
 def register_handlers(client: TelegramClient):
     @client.on(events.NewMessage(chats="@YoutubeFiler_bot"))
     async def handler(event):
+        global output_path
         try:
             text = event.raw_text
 
@@ -126,6 +127,7 @@ def read_links_from_file(file_path: str) -> list:
 
 # -------- Run the client --------
 async def main():
+    global output_path
     # Auto-setup check before anything else
     await ensure_setup()
 
@@ -140,15 +142,25 @@ async def main():
 
     # Parse CLI arguments
     if len(sys.argv) > 1 and sys.argv[1] != "-l":
-        urls = read_links_from_file(file_path=sys.argv[1])
+
+        urls = read_links_from_file(file_path=sys.argv[-1])
+
         if '-o' in sys.argv:
             output_dir_index = sys.argv.index('-o') + 1
             output_path = sys.argv[output_dir_index]
+            print(f"Output directory set to: {output_path}")
             os.makedirs(output_path, exist_ok=True)
+
 
     elif "-l" in sys.argv:
         n = sys.argv.index("-l")
         urls = [sys.argv[n + 1]]
+
+        if '-o' in sys.argv:
+            output_dir_index = sys.argv.index('-o') + 1
+            output_path = sys.argv[output_dir_index]
+            print(f"Output directory set to: {output_path}")
+            os.makedirs(output_path, exist_ok=True)
 
     else:
         raise RuntimeError("""No file path provided.
