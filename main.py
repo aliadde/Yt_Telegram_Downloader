@@ -168,7 +168,10 @@ Please provide the path to the file containing YouTube links as a command-line a
 Example usage:
     python3 main.py /path/to/your/links.txt
 OR if you have only one link:
-    python3 main.py -l <URL>
+    python3 main.py -l <URL> [-o /path/to/output]
+You can also specify an output directory for downloaded videos using the -o flag:
+    python3 main.py  [-o /path/to/output]  /path/to/your/links.txt
+    
 """)
 
     # Build client and register handlers
