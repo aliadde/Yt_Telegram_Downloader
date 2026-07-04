@@ -96,6 +96,8 @@ There are many good Youtube video downloader. But this automation tools work wit
 
 To run this project, you will need your Telegram account's **API ID** and **API Hash**. 
 
+> 💡 **Note:** This Bot **@YoutubeFiler_bot** may have advertising channel that ask you to join this channel. so, before starting downloading your youtube video you must ensure that one you join to these channel and clicking on button "جوین شدم". after that you are free to automate download.
+
 ### Prerequisites
 
 * **Python 3.11+** installed on your system.
