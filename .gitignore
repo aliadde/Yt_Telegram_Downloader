@@ -33,3 +33,4 @@ build/
 *.swn
 .ruff_cache
 static/
+download.sh

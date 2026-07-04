@@ -11,6 +11,12 @@ ENV_FILE = ".env"
 SESSION_FILE = "my_session.session"
 output_path = './static'
 
+# -------- Track the URL currently being processed (needed for retry) --------
+current_url = None          # holds the URL that was last sent to the bot
+retry_count = 0              # how many times we've retried the current URL
+MAX_RETRIES = 4              # safety cap so we don't loop forever
+
+
 # -------- Auto-setup if .env or session is missing --------
 async def ensure_setup():
     if not os.path.exists(ENV_FILE) or not os.path.exists(SESSION_FILE):
@@ -40,11 +46,13 @@ async def send_message(username: str | int, message: str, client: TelegramClient
 
 # -------- Handle incoming messages --------
 def register_handlers(client: TelegramClient):
+    @client.on(events.MessageEdited(chats="@YoutubeFiler_bot"))
     @client.on(events.NewMessage(chats="@YoutubeFiler_bot"))
     async def handler(event):
-        global output_path
+        global output_path, current_url, retry_count  # need to read/update these shared vars
         try:
             text = event.raw_text
+            print("Received:", text)
 
             if event.buttons:
 
@@ -86,6 +94,22 @@ def register_handlers(client: TelegramClient):
                 if not clicked:
                     print("not button i think is there.")
 
+            elif text == "❌ پردازش ویدیو بیش از حد طول کشید. لطفاً دوباره تلاش کنید.":
+                # The bot timed out while processing -> resend the same URL that was in progress
+                retry_count += 1
+
+                if current_url is None:
+                    # Safety guard: shouldn't normally happen, but avoids crashing on None
+                    print("⚠️ No current_url stored, cannot retry.")
+                elif retry_count > MAX_RETRIES:
+                    print(f"❌ Giving up on '{current_url}' after {MAX_RETRIES} retries.")
+                    # Unblock the main loop so it moves on to the next URL instead of hanging forever
+                    download_done.set()
+                else:
+                    print(f"⏳ Timeout received. Retrying ({retry_count}/{MAX_RETRIES}) for: {current_url}")
+                    # Fire-and-forget resend: we are inside an event handler (not the main loop),
+                    # so we schedule the resend as a background task instead of awaiting it directly.
+                    asyncio.create_task(send_message("@YoutubeFiler_bot", str(current_url), client))
 
             elif event.video and event.file:
                 print("Received media message type video.")
@@ -107,8 +131,7 @@ def register_handlers(client: TelegramClient):
                 finally:
                     download_done.set()
 
-            elif text:
-                print("Received:", text)
+            
 
         except Exception as e:
             print(f"ERROR: {e}")
@@ -127,7 +150,7 @@ def read_links_from_file(file_path: str) -> list:
 
 # -------- Run the client --------
 async def main():
-    global output_path
+    global output_path, current_url, retry_count
     # Auto-setup check before anything else
     await ensure_setup()
 
@@ -182,13 +205,19 @@ You can also specify an output directory for downloaded videos using the -o flag
 
     for downloaded_video_count, url in enumerate(urls, start=1):
         download_done.clear()
+
+        # Store the URL currently being processed + reset retry counter for it,
+        # so the handler knows what to resend if a timeout message arrives.
+        current_url = url
+        retry_count = 0
+
         await send_message("@YoutubeFiler_bot", str(url), tg_client)
         await download_done.wait()
 
         # if url is the last url in urls , do not wait for 20 or 50 seconds
         if downloaded_video_count < len(urls) - 1:
             await asyncio.sleep(random.uniform(20, 50))
-
+        
     print("\n\nAll Downloads Done")
     sys.exit(0)
 
